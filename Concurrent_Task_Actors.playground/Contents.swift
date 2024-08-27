@@ -1,5 +1,6 @@
 import UIKit
 
+/*
 class BankAccount{
     var balanceAmount: Double
     
@@ -51,7 +52,7 @@ concurrentQueue.async {
     bankBalance.withDrawAmount(withDrawAmount: 450)
 
 }
-
+*/
 
 //MARK: Using Serial Queue To Avoid Race Condition
 //let serialQueue = DispatchQueue(label: "concurrentQueue")
@@ -63,4 +64,63 @@ concurrentQueue.async {
 //serialQueue.async {
 //    bankBalance.withDrawAmount(withDrawAmount: 450)
 //
+//}
+
+
+actor Bankaccount{
+    var accountBalance: Double
+    
+    init(accountBalance: Double) {
+        self.accountBalance = accountBalance
+    }
+    
+    func withDrawAmount(amount: Double) -> Double{
+        if accountBalance > amount{
+            let processTime = UInt32.random(in: 0...4)
+            print("processing time for the with draw amount is::: \(amount) timer is: \(processTime)")
+            sleep(processTime)
+            
+            print("withdraw amount value is::: \(amount)")
+            accountBalance -= amount
+            print("withdraw has been completed")
+            return accountBalance
+        }
+        else{
+            print("insufficient balance amount")
+            return accountBalance
+        }
+    }
+}
+
+
+let concurrentQueue = DispatchQueue(label: "concurrent", attributes: .concurrent)
+let myAccountBank = Bankaccount(accountBalance: 600)
+
+concurrentQueue.async() {
+    Task {
+        let balance = await myAccountBank.withDrawAmount(amount: 400)
+        print("balance 1::: \(balance)")
+    }
+}
+
+concurrentQueue.async() {
+    Task {
+        let balance = await myAccountBank.withDrawAmount(amount: 500)
+        print("balance 2::: \(balance)")
+    }
+}
+
+//MARK: With Qos running task
+//concurrentQueue.async(qos: .background) {
+//    Task {
+//        let balance = await myAccountBank.withDrawAmount(amount: 400)
+//        print("balance 1::: \(balance)")
+//    }
+//}
+//
+//concurrentQueue.async(qos: .userInteractive) {
+//    Task {
+//        let balance = await myAccountBank.withDrawAmount(amount: 500)
+//        print("balance 2::: \(balance)")
+//    }
 //}
